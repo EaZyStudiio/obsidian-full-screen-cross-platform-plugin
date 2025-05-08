@@ -1,29 +1,31 @@
-# Note
-Switch Branch to Vannila and download ZIP 😥... Umm for the visual learners 
+### What Why HOW
 
-** Step 1 **
-![alt text](assects/howto.png)
+​    What: This plugin is basically a mix of the top 3 plugins Fullscreen plugins "might have overcomplicated things"
 
-** Step 2 ** once downloaded just need to manually install the plugin that's it
-![alt text](assects/Download.png)
+​    Why: 1. they haven't been updated in ages except this one
 
-----
+           2. NO VIM MODE SUPPORT 😭😭
+              very solution sucked in there own ways
 
-# Fullscreen Toggle
+​    HOW: Since am not going to be updating no time I've opted to suffer my self and write this mostly using js
 
-Fullscreen focus across all platforms. It helps you get more display space when you focus on reading notes, especially on mobile devices.
+standards and only when really necessary obsidian API "Read the fun-fact"
 
-**usage**
+### Plugins functionality ported over:
 
-- Shortcuts: double click/touch to toggle fullscreen (or triple by settings).
-- Command: Full screen (It is recommended to use the mobile end, and an example is provided below).
-- Command or hotkey only:  When you feel that mouse clicks will accidentally trigger Fullscreen, you can enable using only commands and shortcut keys through settings. Special thanks for [Aleksey Rowan](https://github.com/aleksey-rowan)'s contribution.
+> Disclaimer: not every feature was ported over "Added some new once", also you'll have to figure out that language support ohhh amm burnt out
+>
+>   - https://github.com/cmoskvitin/obsidian-prozen
+>   - https://github.com/Razumihin/obsidian-fullscreen-plugin/blob/main/main.ts
+>   - https://github.com/DonkeyPacific/obsidian-full-screen-cross-platform-plugin
 
-![Image](./slide.png)
-***
-![Image](./command.png)
+### List of features
 
-**Contact me**
+   - Simulated 
 
-- email: donkeypacific@outlook.com
 
+### FunFact
+
+I was so fasinitated by the whole simulated fullscreen mode idea I totally forgot to do any reasearch before hand about making an obsidian plugin and Well Fullscreen mode plugin by [Razum](https://github.com/Razumihin) was only 84 lines so how hard must it be right 😂😂
+
+But then classic me i had about 3 diffrent plugins since every one was not working well and I came accross 
