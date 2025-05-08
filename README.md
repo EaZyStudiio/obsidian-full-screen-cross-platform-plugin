@@ -31,6 +31,8 @@ standards and only when really necessary obsidian API "Read the fun-fact"
    - Get rid of Debug mode with ts update / collapse it
    - Fix issue with native not toggling when in multi window mode "I have no idea"
    - add toggle to diable zen
+   - Update main.js settings and update css to rgba for pureblack maybe some noise to blend that awful banding
+   - Update naming confusion
 
 
 ### Plugins functionality ported over:

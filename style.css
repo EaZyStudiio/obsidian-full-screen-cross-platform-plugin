@@ -187,3 +187,17 @@ body.obsidian-cross-platform-focus-active.cp-hide-left-sidebar .workspace-leaf:n
 body.obsidian-cross-platform-focus-active.cp-hide-right-sidebar .workspace-leaf:not(:only-child) {
     /* right sidebar */
 }
+
+
+/* --------------------------------- */
+
+.summary-heading {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  line-height: 2;
+  display: inline;
+}
+
+
+
+

@@ -60,6 +60,7 @@ const DEFAULT_SETTINGS = {
     CP = CrossPlatform
     ms = millisec
     JAPPA = bail
+    ANM = Active Note Mode
     */
 
     // Desktop bits to hide for CP Focus
@@ -744,13 +745,51 @@ var ZenModeSettingTab = /** @class */ (function (_super) {
         var containerEl = this.containerEl;
         containerEl.empty();
 
-        containerEl.createEl("h2", { text: "Full Screen Toggle V2 Settings" });
+        containerEl.createEl("h1", { text: "Full Screen Toggle V2 Settings" });
+        containerEl.createEl("hr");
 
-        // --- Active Leaf Zen Mode ---
-        // containerEl.createEl("h3", { text: "Active Leaf Zen Mode" });
-        new obsidian.Setting(containerEl)
-            .setName("Zen Mode Selector")
-            .setDesc("Choose how Zen mode makes the active leaf fullscreen. 'Simulated' is usually smoother.")
+        // --- Tap Trigger (For Both modes) ---
+        const tapTriggerDetails = containerEl.createEl('details');
+        const tapTriggerSummary = tapTriggerDetails.createEl('summary');
+        tapTriggerSummary.createEl('h3', { text: "Tap Trigger (For Both Modes)", cls: "summary-heading" }); // Add class
+        const tapTriggerContainer = tapTriggerDetails.createDiv();
+
+        new obsidian.Setting(tapTriggerContainer)
+            .setName("Tap Action Target")
+            .setDesc("What happens when you do the clicky-tap gesture.")
+            .addDropdown(dropdown => dropdown
+                .addOption("crossPlatformFocus", "Focus Mode")
+                .addOption("zenMode", "Active Note Mode")
+                .setValue(this.plugin.settings.clickActionTarget)
+                .onChange(async (value) => {
+                    this.plugin.settings.clickActionTarget = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new obsidian.Setting(tapTriggerContainer)
+            .setName("Trigger with consecutive clicks/taps")
+            .setDesc("How many times to click/tap to trigger the action. 'Disabled' turns this off.")
+            .addDropdown(dropdown => dropdown
+                .addOption("0", "Disabled")
+                .addOption("2", "2 clicks/taps")
+                .addOption("3", "3 clicks/taps (Default)")
+                .setValue(String(this.plugin.settings.crossPlatformTriggerClicks))
+                .onChange(async (value) => {
+                    this.plugin.settings.crossPlatformTriggerClicks = parseInt(value);
+                    await this.plugin.saveSettings();
+                }));
+
+        containerEl.createEl("hr");
+
+        // --- Active Note Mode (Active Leaf Mode / ANM) ---
+        const anmDetails = containerEl.createEl('details');
+        const anmSummary = anmDetails.createEl('summary');
+        anmSummary.createEl('h3', { text: "Active Note Mode (ANM)", cls: "summary-heading" }); // Add class
+        const anmContainer = anmDetails.createDiv();
+
+        new obsidian.Setting(anmContainer)
+            .setName("ANM Presentation") // Renamed from Zen Mode Selector
+            .setDesc("Choose how ANM makes the active leaf fullscreen. 'Simulated' is usually smoother.")
             .addDropdown(dropdown => dropdown
                 .addOption("simulated", "Simulated (CSS-based)")
                 .addOption("native", "Native (Browser Fullscreen API)")
@@ -759,25 +798,30 @@ var ZenModeSettingTab = /** @class */ (function (_super) {
                     this.plugin.settings.zenModePresentation = value;
                     await this.plugin.saveSettings();
                 }));
-        
-        new obsidian.Setting(containerEl)
-            .setName('Fade-in duration')
-            .setDesc('How long stuff takes to fade in for Zen mode (seconds).')
+
+        // ANM: Vignette Settings (Collapsible)
+        const anmVignetteDetails = anmContainer.createEl('details');
+        // anmVignetteDetails.open = true; // Open by default if desired
+        anmVignetteDetails.createEl('summary', { text: "ANM: Vignette Settings (Shadowy Edges)" });
+        const anmVignetteContainer = anmVignetteDetails.createDiv();
+
+        new obsidian.Setting(anmVignetteContainer) // Moved Fade-in here as "Animation"
+            .setName('Animation: Fade-in duration')
+            .setDesc('How long stuff takes to fade in for ANM (seconds).')
             .addText(text => text
                 .setPlaceholder('e.g. 1.2')
                 .setValue(String(this.plugin.settings.animationDuration))
                 .onChange(async (value) => {
                     var numValue = parseFloat(value);
-                    if (isNaN(numValue) || numValue < 0) numValue = DEFAULT_SETTINGS.animationDuration; // Sanity check
+                    if (isNaN(numValue) || numValue < 0) numValue = DEFAULT_SETTINGS.animationDuration;
                     this.plugin.settings.animationDuration = numValue;
-                    text.setValue(String(numValue)); 
+                    text.setValue(String(numValue));
                     await this.plugin.saveSettings();
                 }));
-
-        containerEl.createEl("h4", { text: "Zen Mode: Vignette (those shadowy edges)" });
-        var vignetteOpacityNumber; // For live updating the number next to slider.
-        new obsidian.Setting(containerEl)
-            .setName('Opacity')
+        
+        var vignetteOpacityNumber;
+        new obsidian.Setting(anmVignetteContainer)
+            .setName('Vignette: Opacity')
             .setDesc("How dark the vignette is. 0 to turn it off completely.")
             .addSlider(slider => slider
                 .setLimits(0.00, 1, 0.01)
@@ -794,8 +838,8 @@ var ZenModeSettingTab = /** @class */ (function (_super) {
             });
 
         var vignetteScaleLinearNumber;
-        new obsidian.Setting(containerEl)
-            .setName('Scale in text views (%)')
+        new obsidian.Setting(anmVignetteContainer)
+            .setName('Vignette: Scale in text views (%)')
             .setDesc("How far the vignette spreads from sides for normal text views.")
             .addSlider(slider => slider
                 .setLimits(5, 50, 1)
@@ -812,8 +856,8 @@ var ZenModeSettingTab = /** @class */ (function (_super) {
             });
 
         var vignetteScaleRadialNumber;
-        new obsidian.Setting(containerEl)
-            .setName('Scale in graph view (%)')
+        new obsidian.Setting(anmVignetteContainer)
+            .setName('Vignette: Scale in graph view (%)')
             .setDesc("Vignette spread for graph view (more circular).")
             .addSlider(slider => slider
                 .setLimits(5, 100, 1)
@@ -829,71 +873,69 @@ var ZenModeSettingTab = /** @class */ (function (_super) {
                 el.innerText = " " + this.plugin.settings.vignetteScaleRadial.toString();
             });
 
-        containerEl.createEl("h4", { text: "Zen Mode: Element Toggles (Show/Hide bits)" });
-        new obsidian.Setting(containerEl).setName("Show header").addToggle(t=>t.setValue(this.plugin.settings.showHeader).onChange(async v=>{this.plugin.settings.showHeader=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Show scrollbar").addToggle(t=>t.setValue(this.plugin.settings.showScroll).onChange(async v=>{this.plugin.settings.showScroll=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Show graph controls").addToggle(t=>t.setValue(this.plugin.settings.showGraphControls).onChange(async v=>{this.plugin.settings.showGraphControls=v; await this.plugin.saveSettings();}));
-        
-        containerEl.createEl("h4", { text: "Zen Mode: Misc" });
-        new obsidian.Setting(containerEl).setName("Force content centering (readable width)").addToggle(t=>t.setValue(this.plugin.settings.forceReadable).onChange(async v=>{this.plugin.settings.forceReadable=v; await this.plugin.saveSettings();}));
+        // ANM: Element Toggles (Collapsible)
+        const anmElementTogglesDetails = anmContainer.createEl('details');
+        anmElementTogglesDetails.createEl('summary', { text: "ANM: Element Toggles" });
+        const anmElementTogglesContainer = anmElementTogglesDetails.createDiv();
 
-        // --- Cross-Platform Focus Mode ---
-        containerEl.createEl("h3", { text: "Cross-Platform Focus Mode (UI Hiding)" });
-        new obsidian.Setting(containerEl)
-            .setName("Enable Cross-Platform Focus Mode")
-            .setDesc("Hides general UI bits. Has its own command and can be triggered by clicks/taps too.")
+        new obsidian.Setting(anmElementTogglesContainer).setName("Show header").addToggle(t=>t.setValue(this.plugin.settings.showHeader).onChange(async v=>{this.plugin.settings.showHeader=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(anmElementTogglesContainer).setName("Show scrollbar").addToggle(t=>t.setValue(this.plugin.settings.showScroll).onChange(async v=>{this.plugin.settings.showScroll=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(anmElementTogglesContainer).setName("Show graph controls").addToggle(t=>t.setValue(this.plugin.settings.showGraphControls).onChange(async v=>{this.plugin.settings.showGraphControls=v; await this.plugin.saveSettings();}));
+
+        // ANM: Misc (Collapsible, or directly if only one item)
+        const anmMiscDetails = anmContainer.createEl('details');
+        anmMiscDetails.open = true; // Open by default if desired
+        anmMiscDetails.createEl('summary', { text: "ANM: Misc" });
+        const anmMiscContainer = anmMiscDetails.createDiv();
+        new obsidian.Setting(anmMiscContainer).setName("Force content centering (readable width)").addToggle(t=>t.setValue(this.plugin.settings.forceReadable).onChange(async v=>{this.plugin.settings.forceReadable=v; await this.plugin.saveSettings();}));
+
+
+        containerEl.createEl("hr");
+
+        // --- Focus Mode (UI Hiding) ---
+        const focusModeDetails = containerEl.createEl('details');
+        const focusModeSummary = focusModeDetails.createEl('summary');
+        focusModeSummary.createEl('h3', { text: "Focus Mode (UI Hiding)", cls: "summary-heading" }); // Add class
+        const focusModeContainer = focusModeDetails.createDiv();
+
+        new obsidian.Setting(focusModeContainer)
+            .setName("Enable Focus Mode")
+            .setDesc("Hides general UI bits. Can be triggered by the tap gesture.")
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.enableCrossPlatformFocus)
                 .onChange(async (value) => {
                     this.plugin.settings.enableCrossPlatformFocus = value;
-                    await this.plugin.saveSettings(); 
-                    if (!value && this.plugin.isCrossPlatformFocusActive) { // If disabled while active, turn it off.
+                    await this.plugin.saveSettings();
+                    if (!value && this.plugin.isCrossPlatformFocusActive) {
                         this.plugin.deactivateCrossPlatformFocusMode();
                     }
                 }));
 
-        containerEl.createEl("h4", { text: "Click/Tap Trigger (for Zen or CP Focus)" });
-        new obsidian.Setting(containerEl)
-            .setName("Trigger with consecutive clicks/taps")
-            .setDesc("How many times to click/tap to trigger the action below. 'Disabled' turns this off.")
-            .addDropdown(dropdown => dropdown
-                .addOption("0", "Disabled")
-                .addOption("2", "2 clicks/taps")
-                .addOption("3", "3 clicks/taps (Default)")
-                .setValue(String(this.plugin.settings.crossPlatformTriggerClicks))
-                .onChange(async (value) => {
-                    this.plugin.settings.crossPlatformTriggerClicks = parseInt(value);
-                    await this.plugin.saveSettings(); // This will update the listener.
-                }));
-        
-        new obsidian.Setting(containerEl)
-            .setName("Click/Tap Action Target")
-            .setDesc("What happens when you do the clicky-tap gesture.")
-            .addDropdown(dropdown => dropdown
-                .addOption("crossPlatformFocus", "Toggle Cross-Platform Focus")
-                .addOption("zenMode", "Toggle Zen Mode")
-                .setValue(this.plugin.settings.clickActionTarget)
-                .onChange(async (value) => {
-                    this.plugin.settings.clickActionTarget = value;
-                    await this.plugin.saveSettings(); // Also updates listener.
-                }));
+        // Focus Mode: Desktop Elements to Hide (Collapsible)
+        const fmDesktopDetails = focusModeContainer.createEl('details');
+        fmDesktopDetails.createEl('summary', { text: "Focus Mode: Desktop Elements to Hide" });
+        const fmDesktopContainer = fmDesktopDetails.createDiv();
+        new obsidian.Setting(fmDesktopContainer).setName("Left Ribbon").addToggle(t=>t.setValue(this.plugin.settings.cpHideLeftRibbon).onChange(async v=>{this.plugin.settings.cpHideLeftRibbon=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(fmDesktopContainer).setName("Right Ribbon").addToggle(t=>t.setValue(this.plugin.settings.cpHideRightRibbon).onChange(async v=>{this.plugin.settings.cpHideRightRibbon=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(fmDesktopContainer).setName("Left Sidebar (Split)").addToggle(t=>t.setValue(this.plugin.settings.cpHideLeftSidebar).onChange(async v=>{this.plugin.settings.cpHideLeftSidebar=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(fmDesktopContainer).setName("Right Sidebar (Split)").addToggle(t=>t.setValue(this.plugin.settings.cpHideRightSidebar).onChange(async v=>{this.plugin.settings.cpHideRightSidebar=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(fmDesktopContainer).setName("Status Bar").addToggle(t=>t.setValue(this.plugin.settings.cpHideStatusBar).onChange(async v=>{this.plugin.settings.cpHideStatusBar=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(fmDesktopContainer).setName("Top Tab Bar/Header").addToggle(t=>t.setValue(this.plugin.settings.cpHideTopTabContainer).onChange(async v=>{this.plugin.settings.cpHideTopTabContainer=v; await this.plugin.saveSettings();}));
 
-        containerEl.createEl("h4", { text: "Cross-Platform: Desktop Elements to Hide" });
-        new obsidian.Setting(containerEl).setName("Left Ribbon").addToggle(t=>t.setValue(this.plugin.settings.cpHideLeftRibbon).onChange(async v=>{this.plugin.settings.cpHideLeftRibbon=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Right Ribbon").addToggle(t=>t.setValue(this.plugin.settings.cpHideRightRibbon).onChange(async v=>{this.plugin.settings.cpHideRightRibbon=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Left Sidebar (Split)").addToggle(t=>t.setValue(this.plugin.settings.cpHideLeftSidebar).onChange(async v=>{this.plugin.settings.cpHideLeftSidebar=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Right Sidebar (Split)").addToggle(t=>t.setValue(this.plugin.settings.cpHideRightSidebar).onChange(async v=>{this.plugin.settings.cpHideRightSidebar=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Status Bar").addToggle(t=>t.setValue(this.plugin.settings.cpHideStatusBar).onChange(async v=>{this.plugin.settings.cpHideStatusBar=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Top Tab Bar/Header").addToggle(t=>t.setValue(this.plugin.settings.cpHideTopTabContainer).onChange(async v=>{this.plugin.settings.cpHideTopTabContainer=v; await this.plugin.saveSettings();}));
+        // Focus Mode: Mobile Elements to Hide (Collapsible)
+        const fmMobileDetails = focusModeContainer.createEl('details');
+        fmMobileDetails.createEl('summary', { text: "Focus Mode: Mobile Elements to Hide" });
+        const fmMobileContainer = fmMobileDetails.createDiv();
+        new obsidian.Setting(fmMobileContainer).setName("Mobile: Bottom Navbar").addToggle(t=>t.setValue(this.plugin.settings.cpMobileHideNavbar).onChange(async v=>{this.plugin.settings.cpMobileHideNavbar=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(fmMobileContainer).setName("Mobile: View Header").setDesc("Careful, this one can sometimes cause issues on mobile.").addToggle(t=>t.setValue(this.plugin.settings.cpMobileHideViewHeader).onChange(async v=>{this.plugin.settings.cpMobileHideViewHeader=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(fmMobileContainer).setName("Mobile: Active Tab Header").addToggle(t=>t.setValue(this.plugin.settings.cpMobileHideTabHeaderInner).onChange(async v=>{this.plugin.settings.cpMobileHideTabHeaderInner=v; await this.plugin.saveSettings();}));
+        new obsidian.Setting(fmMobileContainer).setName("Tablet: Top Tab Bar").setDesc("For tablets, hides the main tab container thingy.").addToggle(t=>t.setValue(this.plugin.settings.cpMobileHideTabHeaderContainerTablet).onChange(async v=>{this.plugin.settings.cpMobileHideTabHeaderContainerTablet=v; await this.plugin.saveSettings();}));
 
 
-        containerEl.createEl("h4", { text: "Cross-Platform: Mobile Elements to Hide" });
-        new obsidian.Setting(containerEl).setName("Mobile: Bottom Navbar").addToggle(t=>t.setValue(this.plugin.settings.cpMobileHideNavbar).onChange(async v=>{this.plugin.settings.cpMobileHideNavbar=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Mobile: View Header").setDesc("Careful, this one can sometimes cause issues on mobile.").addToggle(t=>t.setValue(this.plugin.settings.cpMobileHideViewHeader).onChange(async v=>{this.plugin.settings.cpMobileHideViewHeader=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Mobile: Active Tab Header").addToggle(t=>t.setValue(this.plugin.settings.cpMobileHideTabHeaderInner).onChange(async v=>{this.plugin.settings.cpMobileHideTabHeaderInner=v; await this.plugin.saveSettings();}));
-        new obsidian.Setting(containerEl).setName("Tablet: Top Tab Bar").setDesc("For tablets, hides the main tab container thingy.").addToggle(t=>t.setValue(this.plugin.settings.cpMobileHideTabHeaderContainerTablet).onChange(async v=>{this.plugin.settings.cpMobileHideTabHeaderContainerTablet=v; await this.plugin.saveSettings();}));
-        
-        containerEl.createEl("h3", { text: "Debugging (for me mostly!)" });
+        containerEl.createEl("hr");
+
+        // --- Debugging ---
+        containerEl.createEl("h3", { text: "Debugging" });
         new obsidian.Setting(containerEl)
             .setName("Enable Debug Mode")
             .setDesc("Spits out more stuff to the console if things are acting weird.")
