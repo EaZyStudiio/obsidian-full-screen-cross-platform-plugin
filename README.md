@@ -1,3 +1,6 @@
+### !important
+   Plugin is designed to basically go years without update so if that happens NO BIGGI if it breaks I'll be back I use obsidian everyday so I'll know
+
 ### What Why HOW
 
 ​    What: This plugin is basically a mix of the top 3 plugins Fullscreen plugins "might have overcomplicated things"
@@ -18,7 +21,16 @@ standards and only when really necessary obsidian API "Read the fun-fact"
    - mix and match of different modes 
    - convert to TS
    - Comments - EaZY Style comment mode
-   - Better settings stucturing
+   - Better settings stucturing - Excalidraw - pdf++
+   - fullscreen slow veryyyyy 
+   - Maybe some hover support like since am from windows land!
+   - Update defaults stop using prozen defaults
+      - I want my titles back!
+   - Make edge fade go back not in front and make it pure black 
+   - Ability to use custom modes depending on notes/folder/tags/cssclass
+   - Get rid of Debug mode with ts update / collapse it
+   - Fix issue with native not toggling when in multi window mode "I have no idea"
+   - add toggle to diable zen
 
 
 ### Plugins functionality ported over:
