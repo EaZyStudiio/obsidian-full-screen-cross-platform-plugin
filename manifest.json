@@ -1,0 +1,14 @@
+{
+	"id": "full-screen-cross-platform-v2",
+	"name": "Full Screen Toggle V2",
+	"version": "2.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Fullscreen focus across all platforms. It helps you get more display space when you focus on reading notes, especially on mobile devices.",
+	"authorUrl": "https://github.com/DonkeyPacific",
+	"fundingUrl": {
+		"Buy Me a Coffee": "https://www.buymeacoffee.com/donkeypacific",
+		"Afdian(爱发电)": "https://afdian.net/a/donkeypacific",
+		"Patreon": "https://patreon.com/DonkeyPacific"
+	},
+	"isDesktopOnly": false
+}
